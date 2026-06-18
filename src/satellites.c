@@ -86,7 +86,8 @@ static long cos_approx(long angle_deg)
     return val;
 }
 
-void calculate_state(long angle, long sunload_x100, long txpower_x10,
+cvoid calculate_state(long angle, long sunload_x100, long txpower_x10,
+                     long t_created, long t_now,
                      const SatelliteModel *model, SatelliteState *out)
 {
     long cos_val;    /* cos * 1000 */
@@ -95,6 +96,7 @@ void calculate_state(long angle, long sunload_x100, long txpower_x10,
     long consumption;
     long net_power;
     long battery;
+    long dt_hours;     /* прошедшее время, часы */
     long temp;
     long battery_pct;
     int  temp_ok, tx_ok;
@@ -116,17 +118,20 @@ void calculate_state(long angle, long sunload_x100, long txpower_x10,
     out->generated_power = generated; /* Вт */
 
     /* 2. Заряд аккумулятора */
-    consumption = txpower_x10 / 10 + 5; /* Вт */
-    net_power   = generated - consumption;
-    battery     = model->battery_capacity / 1000 / 2 /* Вт*ч */
-                  + net_power * DELTA_T_HOURS;
+    dt_hours = t_now - t_created;
+    if (dt_hours < 0) dt_hours = 0;
+
+    consumption = txpower_x10 / 10 + 5;       /* Вт */
+    net_power   = generated - consumption;     /* Вт */
+    battery     = model->battery_capacity / 1000
+                  + net_power * dt_hours;      /* Вт*ч */
 
     if (battery < 0)
         battery = 0;
     if (battery > model->battery_capacity / 1000)
         battery = model->battery_capacity / 1000;
 
-    out->battery_level = battery; /* Вт·ч */
+    out->battery_level = battery; /* Вт*ч */
 
     /* 3. Температура (в милли-градусах для точности) */
     temp = -100000; /* -100°C * 1000 */
