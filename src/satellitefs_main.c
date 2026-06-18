@@ -106,11 +106,12 @@ next:;
 
 static int parse_content(const char *content,
                           long *angle, long *sunload_x100,
-                          long *txpower_x10)
+                          long *txpower_x10,
+                          long *t_created, long *t_now)
 {
     /* Парсим строку "ANGLE SUNLOAD TXPOWER" вручную без sscanf */
     const char *p = content;
-    long a = 0, s_int = 0, s_frac = 0, t_int = 0, t_frac = 0;
+    long a = 0, s_int = 0, s_frac = 0, t_int = 0, t_frac = 0, long tc = 0, tn = 0;
     int frac_digits;
 
     while (*p == ' ') p++;
@@ -143,13 +144,25 @@ static int parse_content(const char *content,
             frac_digits++;
         }
     }
+    
+    /* T_СОЗД — время создания спутника (часы) */
+    while (*p == ' ') p++;
+    if (*p < '0' || *p > '9') return 0;
+    while (*p >= '0' && *p <= '9') tc = tc*10 + (*p++ - '0');
 
+    /* T_ТЕК — текущее время (часы) */
+    while (*p == ' ') p++;
+    if (*p < '0' || *p > '9') return 0;
+    while (*p >= '0' && *p <= '9') tn = tn*10 + (*p++ - '0');
+    
     while (*p == ' ' || *p == '\n' || *p == '\r') p++;
     if (*p != '\0') return 0;
 
     *angle        = a;
     *sunload_x100 = s_int * 100 + s_frac;
     *txpower_x10  = t_int * 10  + t_frac;
+    *t_created    = tc;
+    *t_now        = tn;
     return 1;
 }
 
