@@ -29,6 +29,7 @@ extern const SatelliteModel SATELLITE_MODELS[MAX_MODELS];
 const SatelliteModel *find_model(const char *name);
 
 void calculate_state(long angle, long sunload_x100, long txpower_x10,
+                     long t_created, long t_now,
                      const SatelliteModel *model, SatelliteState *out);
 
 #endif
