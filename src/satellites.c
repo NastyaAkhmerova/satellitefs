@@ -5,6 +5,8 @@
 /* Все вычисления в целых числах, масштаб x1000 */
 #define MARS_SOLAR_FACTOR 433  /* 0.433 * 1000 */
 
+#define DELTA_T_HOURS 1  /* расчётный интервал, часы */
+
 const SatelliteModel SATELLITE_MODELS[MAX_MODELS] = {
     {
         .model_name       = "ARES-1",
@@ -116,8 +118,8 @@ void calculate_state(long angle, long sunload_x100, long txpower_x10,
     /* 2. Заряд аккумулятора */
     consumption = txpower_x10 / 10 + 5; /* Вт */
     net_power   = generated - consumption;
-    battery     = model->battery_capacity / 1000 / 2
-                  + net_power / 2;
+    battery     = model->battery_capacity / 1000 / 2 /* Вт*ч */
+                  + net_power * DELTA_T_HOURS;
 
     if (battery < 0)
         battery = 0;
